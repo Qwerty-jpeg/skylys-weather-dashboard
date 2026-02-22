@@ -1,5 +1,5 @@
 {
-  "name": "skylys-weather-dashb-8di047pp",
+  "name": "vite-cf-do-v2-runner",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,8 +9,7 @@
     "lint": "eslint --cache -f json --quiet .",
     "preview": "bun run build && vite preview --host 0.0.0.0 --port ${PORT:-4173}",
     "deploy": "bun run build && wrangler deploy",
-    "cf-typegen": "wrangler types",
-    "prepare": "bun .bootstrap.js || true"
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -55,11 +54,11 @@
     "embla-carousel-react": "^8.6.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
-    "framer-motion": "^12.23.0",
+    "framer-motion": "^12.34.3",
     "hono": "^4.8.5",
     "immer": "^10.1.1",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.525.0",
+    "lucide-react": "^0.575.0",
     "next-themes": "^0.4.6",
     "pino": "^9.11.0",
     "react": "^18.3.1",
@@ -73,9 +72,9 @@
     "react-select": "^5.10.2",
     "react-swipeable": "^7.0.2",
     "react-use": "^17.6.0",
-    "recharts": "2.15.4",
+    "recharts": "^3.7.0",
     "sonner": "^2.0.6",
-    "tailwind-merge": "^3.3.1",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.3.5",
     "uuid": "^11.1.0",
