@@ -18,6 +18,33 @@ const getWeatherDescription = (code: number): string => {
   return codes[code] || 'Unknown';
 };
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
+  // Search Autocomplete Endpoint
+  app.get('/api/search', async (c) => {
+    const q = c.req.query('q');
+    if (!q || q.length < 2) {
+      return ok(c, []);
+    }
+    try {
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`;
+      const geoRes = await fetch(geoUrl);
+      const geoData = await geoRes.json() as any;
+      if (!geoData.results) {
+        return ok(c, []);
+      }
+      const results = geoData.results.map((item: any) => ({
+        name: item.name,
+        country: item.country,
+        lat: item.latitude,
+        lon: item.longitude,
+        admin1: item.admin1 // State/Region often useful for disambiguation
+      }));
+      return ok(c, results);
+    } catch (error) {
+      console.error('Geocoding API Error:', error);
+      return bad(c, 'Failed to fetch search suggestions');
+    }
+  });
+  // Weather Data Endpoint
   app.get('/api/weather', async (c) => {
     const q = c.req.query('q');
     const latParam = c.req.query('lat');
@@ -40,7 +67,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       } else if (latParam && lonParam) {
         lat = parseFloat(latParam);
         lon = parseFloat(lonParam);
-        // Reverse geocoding is not strictly needed for weather, but nice for display. 
+        // Reverse geocoding is not strictly needed for weather, but nice for display.
         // For simplicity, we'll just use coordinates or a generic name if not provided.
         // In a real app, we'd call a reverse geocoding API here.
         name = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;

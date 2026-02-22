@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, MapPin, History, CloudSun, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, History, CloudSun, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,23 +13,73 @@ import {
 import { useWeatherStore } from '@/store/weather-store';
 import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
+import { searchCities, SearchResult } from '@/lib/weather-api';
+import { useDebounce } from 'react-use';
 const POPULAR_CITIES = [
   'London', 'New York', 'Tokyo', 'Paris', 'Sydney', 'Dubai', 'Singapore'
 ];
 export function WeatherHeader() {
   const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const searchCity = useWeatherStore((s) => s.searchCity);
+  const searchByCoords = useWeatherStore((s) => s.searchByCoords);
   const recentSearches = useWeatherStore((s) => s.recentSearches);
   const clearHistory = useWeatherStore((s) => s.clearHistory);
   const unit = useWeatherStore((s) => s.unit);
   const toggleUnit = useWeatherStore((s) => s.toggleUnit);
   const { isDark, toggleTheme } = useTheme();
+  // Debounce search
+  useDebounce(
+    () => {
+      if (query.length > 2) {
+        setIsSearching(true);
+        searchCities(query)
+          .then((results) => {
+            setSuggestions(results);
+            setShowSuggestions(true);
+          })
+          .catch((err) => {
+            console.error('Search failed', err);
+            setSuggestions([]);
+          })
+          .finally(() => {
+            setIsSearching(false);
+          });
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    },
+    300,
+    [query]
+  );
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
       searchCity(query.trim());
+      setShowSuggestions(false);
       setQuery('');
     }
+  };
+  const handleSuggestionClick = (city: SearchResult) => {
+    searchByCoords(city.lat, city.lon);
+    setQuery('');
+    setShowSuggestions(false);
   };
   const handleQuickSearch = (city: string) => {
     searchCity(city);
@@ -47,16 +97,51 @@ export function WeatherHeader() {
           </span>
         </div>
         {/* Search Area */}
-        <div className="flex-1 max-w-md">
+        <div className="flex-1 max-w-md relative" ref={searchRef}>
           <form onSubmit={handleSearch} className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-sky-500 transition-colors">
+              {isSearching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </div>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => {
+                if (query.length > 2 && suggestions.length > 0) {
+                  setShowSuggestions(true);
+                }
+              }}
               placeholder="Search city..."
               className="pl-9 pr-4 h-10 bg-white/40 dark:bg-black/20 border-transparent focus:bg-background/80 focus:border-sky-500/50 transition-all duration-300 rounded-xl backdrop-blur-sm shadow-sm"
             />
           </form>
+          {/* Autocomplete Dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-background/95 backdrop-blur-md border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+              <div className="py-1">
+                {suggestions.map((city, index) => (
+                  <button
+                    key={`${city.lat}-${city.lon}-${index}`}
+                    onClick={() => handleSuggestionClick(city)}
+                    className="w-full text-left px-4 py-2.5 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors flex items-center gap-3 group"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform">
+                      <MapPin className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground">{city.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {[city.admin1, city.country].filter(Boolean).join(', ')}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         {/* Actions Area */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -78,9 +163,9 @@ export function WeatherHeader() {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className={cn(
                   "hidden sm:flex hover:bg-white/20 dark:hover:bg-black/20 hover:text-sky-600 transition-colors",
                   recentSearches.length === 0 && "opacity-50 pointer-events-none"
@@ -93,10 +178,10 @@ export function WeatherHeader() {
               <div className="flex items-center justify-between px-2 py-1.5">
                 <span className="text-sm font-semibold">Recent Searches</span>
                 {recentSearches.length > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 text-muted-foreground hover:text-destructive" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
                     onClick={clearHistory}
                   >
                     <Trash2 className="h-3 w-3" />

@@ -32,9 +32,19 @@ export interface WeatherData {
     distance: number; // km
   }>;
 }
+export interface SearchResult {
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  admin1?: string;
+}
 export async function fetchWeather(query: string): Promise<WeatherData> {
   return api<WeatherData>(`/api/weather?q=${encodeURIComponent(query)}`);
 }
 export async function fetchWeatherByCoords(lat: number, lon: number): Promise<WeatherData> {
   return api<WeatherData>(`/api/weather?lat=${lat}&lon=${lon}`);
+}
+export async function searchCities(query: string): Promise<SearchResult[]> {
+  return api<SearchResult[]>(`/api/search?q=${encodeURIComponent(query)}`);
 }
