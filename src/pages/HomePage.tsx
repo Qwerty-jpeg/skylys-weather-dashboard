@@ -45,7 +45,7 @@ export function HomePage() {
         </main>
         <footer className="border-t border-white/10 py-8 mt-12 bg-background/20 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-            <p>Built with ❤️ by Aurelia | Your AI Co-founder</p>
+            <p>Built with ❤️ by Durgpaal</p>
             <p className="mt-2 text-xs opacity-70">Weather data provided by OpenMeteo</p>
           </div>
         </footer>

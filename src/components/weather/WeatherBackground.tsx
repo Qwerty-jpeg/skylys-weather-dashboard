@@ -37,7 +37,7 @@ export function WeatherBackground() {
       const newGradient = getBackgroundGradient(data.current.iconCode, data.current.isDay);
       setGradient(newGradient);
     }
-  }, [data?.current?.iconCode, data?.current?.isDay]);
+  }, [data]);
   return (
     <div className="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
       <AnimatePresence mode="popLayout">
