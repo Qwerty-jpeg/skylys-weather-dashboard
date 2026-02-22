@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, History, CloudSun, Trash2, Loader2 } from 'lucide-react';
+import { Search, MapPin, History, CloudSun, Trash2, Loader2, Heart, Share2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,6 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 import { searchCities, SearchResult } from '@/lib/weather-api';
 import { useDebounce } from 'react-use';
+import { toast } from 'sonner';
 const POPULAR_CITIES = [
   'London', 'New York', 'Tokyo', 'Paris', 'Sydney', 'Dubai', 'Singapore'
 ];
@@ -30,6 +31,9 @@ export function WeatherHeader() {
   const clearHistory = useWeatherStore((s) => s.clearHistory);
   const unit = useWeatherStore((s) => s.unit);
   const toggleUnit = useWeatherStore((s) => s.toggleUnit);
+  const favorites = useWeatherStore((s) => s.favorites);
+  const toggleFavorite = useWeatherStore((s) => s.toggleFavorite);
+  const currentData = useWeatherStore((s) => s.data);
   const { isDark, toggleTheme } = useTheme();
   // Debounce search
   useDebounce(
@@ -84,6 +88,21 @@ export function WeatherHeader() {
   const handleQuickSearch = (city: string) => {
     searchCity(city);
   };
+  const handleShare = () => {
+    if (currentData?.location?.name) {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success(`Link copied for ${currentData.location.name}!`);
+      }).catch(() => {
+        toast.error("Failed to copy link");
+      });
+    } else {
+      toast.error("No city selected to share");
+    }
+  };
+  const isCurrentFavorite = currentData?.location?.name 
+    ? favorites.includes(currentData.location.name) 
+    : false;
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/20 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -145,6 +164,30 @@ export function WeatherHeader() {
         </div>
         {/* Actions Area */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Favorites Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hidden sm:flex hover:bg-white/20 dark:hover:bg-black/20 hover:text-sky-600 transition-colors">
+                <Star className={cn("h-5 w-5", favorites.length > 0 ? "fill-yellow-400 text-yellow-400" : "")} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-background/95 backdrop-blur-md border-white/10">
+              <DropdownMenuLabel>Favorite Cities</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {favorites.length === 0 ? (
+                <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+                  No favorites yet
+                </div>
+              ) : (
+                favorites.map((city) => (
+                  <DropdownMenuItem key={city} onClick={() => handleQuickSearch(city)} className="cursor-pointer">
+                    {city}
+                  </DropdownMenuItem>
+                ))
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Popular Cities Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="hidden sm:flex hover:bg-white/20 dark:hover:bg-black/20 hover:text-sky-600 transition-colors">
@@ -161,6 +204,7 @@ export function WeatherHeader() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          {/* Recent Searches Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -203,6 +247,29 @@ export function WeatherHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="h-6 w-px bg-border/50 mx-1 hidden sm:block" />
+          {/* Share Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleShare}
+            className="rounded-full hover:bg-white/20 dark:hover:bg-black/20 hover:text-sky-600 transition-colors"
+            title="Share Link"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+          {/* Like/Favorite Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => currentData?.location?.name && toggleFavorite(currentData.location.name)}
+            className={cn(
+              "rounded-full hover:bg-white/20 dark:hover:bg-black/20 transition-colors",
+              isCurrentFavorite ? "text-red-500 hover:text-red-600" : "hover:text-red-500"
+            )}
+            title={isCurrentFavorite ? "Remove from Favorites" : "Add to Favorites"}
+          >
+            <Heart className={cn("h-5 w-5", isCurrentFavorite ? "fill-current" : "")} />
+          </Button>
           <Button
             variant="ghost"
             size="sm"

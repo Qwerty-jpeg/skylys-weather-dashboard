@@ -7,6 +7,7 @@ interface WeatherState {
   error: string | null;
   unit: 'C' | 'F';
   recentSearches: string[];
+  favorites: string[];
   // Actions
   searchCity: (query: string) => Promise<void>;
   searchByCoords: (lat: number, lon: number) => Promise<void>;
@@ -14,6 +15,7 @@ interface WeatherState {
   clearError: () => void;
   addToHistory: (city: string) => void;
   clearHistory: () => void;
+  toggleFavorite: (city: string) => void;
 }
 export const useWeatherStore = create<WeatherState>()(
   persist(
@@ -23,6 +25,7 @@ export const useWeatherStore = create<WeatherState>()(
       error: null,
       unit: 'C',
       recentSearches: [],
+      favorites: [],
       searchCity: async (query: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -30,7 +33,7 @@ export const useWeatherStore = create<WeatherState>()(
           set((state) => {
             // Filter out duplicates and keep only top 5
             const newHistory = [
-              data.location.name, 
+              data.location.name,
               ...state.recentSearches.filter(s => s !== data.location.name)
             ].slice(0, 5);
             return { data, isLoading: false, recentSearches: newHistory };
@@ -48,7 +51,7 @@ export const useWeatherStore = create<WeatherState>()(
           const data = await fetchWeatherByCoords(lat, lon);
           set((state) => {
              const newHistory = [
-               data.location.name, 
+               data.location.name,
                ...state.recentSearches.filter(s => s !== data.location.name)
              ].slice(0, 5);
              return { data, isLoading: false, recentSearches: newHistory };
@@ -66,10 +69,22 @@ export const useWeatherStore = create<WeatherState>()(
         recentSearches: [city, ...state.recentSearches.filter(s => s !== city)].slice(0, 5)
       })),
       clearHistory: () => set({ recentSearches: [] }),
+      toggleFavorite: (city: string) => set((state) => {
+        const isFavorite = state.favorites.includes(city);
+        if (isFavorite) {
+          return { favorites: state.favorites.filter(c => c !== city) };
+        } else {
+          return { favorites: [...state.favorites, city] };
+        }
+      }),
     }),
     {
       name: 'skylys-weather-storage',
-      partialize: (state) => ({ unit: state.unit, recentSearches: state.recentSearches }),
+      partialize: (state) => ({ 
+        unit: state.unit, 
+        recentSearches: state.recentSearches,
+        favorites: state.favorites 
+      }),
     }
   )
 );
