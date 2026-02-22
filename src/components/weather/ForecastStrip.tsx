@@ -18,7 +18,7 @@ export function ForecastStrip() {
   if (!data?.forecast) return null;
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 text-foreground/90">
         <Calendar className="w-5 h-5 text-sky-500" />
         <h3 className="text-2xl font-bold tracking-tight">5-Day Forecast</h3>
       </div>
@@ -35,19 +35,19 @@ export function ForecastStrip() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
               className={`
-                flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300
-                ${isToday 
-                  ? 'bg-sky-50 border-sky-200 dark:bg-sky-950/30 dark:border-sky-800 shadow-sm' 
-                  : 'bg-card border-border/50 hover:border-sky-200 dark:hover:border-sky-800'
+                flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 backdrop-blur-md
+                ${isToday
+                  ? 'bg-sky-50/80 border-sky-200 dark:bg-sky-900/40 dark:border-sky-700 shadow-lg shadow-sky-500/10'
+                  : 'bg-background/60 border-white/10 hover:bg-background/80 hover:border-sky-200 dark:hover:border-sky-700'
                 }
               `}
             >
-              <span className={`text-sm font-medium mb-2 ${isToday ? 'text-sky-600 dark:text-sky-400' : 'text-muted-foreground'}`}>
+              <span className={`text-sm font-medium mb-2 ${isToday ? 'text-sky-600 dark:text-sky-300' : 'text-muted-foreground'}`}>
                 {isToday ? 'Today' : format(date, 'EEE')}
               </span>
-              <span className="text-4xl mb-3 filter drop-shadow-sm">{getWeatherIcon(day.iconCode)}</span>
+              <span className="text-4xl mb-3 filter drop-shadow-sm transform hover:scale-110 transition-transform duration-300">{getWeatherIcon(day.iconCode)}</span>
               <div className="flex items-center gap-3 w-full justify-center">
-                <span className="text-lg font-bold">{max}°</span>
+                <span className="text-lg font-bold text-foreground">{max}°</span>
                 <span className="text-sm text-muted-foreground font-medium">{min}°</span>
               </div>
               <span className="text-xs text-muted-foreground mt-2 text-center line-clamp-1 px-1">

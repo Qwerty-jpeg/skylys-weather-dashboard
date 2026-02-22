@@ -13,6 +13,7 @@ interface WeatherState {
   toggleUnit: () => void;
   clearError: () => void;
   addToHistory: (city: string) => void;
+  clearHistory: () => void;
 }
 export const useWeatherStore = create<WeatherState>()(
   persist(
@@ -27,13 +28,17 @@ export const useWeatherStore = create<WeatherState>()(
         try {
           const data = await fetchWeather(query);
           set((state) => {
-            const newHistory = [data.location.name, ...state.recentSearches.filter(s => s !== data.location.name)].slice(0, 5);
+            // Filter out duplicates and keep only top 5
+            const newHistory = [
+              data.location.name, 
+              ...state.recentSearches.filter(s => s !== data.location.name)
+            ].slice(0, 5);
             return { data, isLoading: false, recentSearches: newHistory };
           });
         } catch (err) {
-          set({ 
-            error: err instanceof Error ? err.message : 'Failed to fetch weather data', 
-            isLoading: false 
+          set({
+            error: err instanceof Error ? err.message : 'Failed to fetch weather data',
+            isLoading: false
           });
         }
       },
@@ -42,13 +47,16 @@ export const useWeatherStore = create<WeatherState>()(
         try {
           const data = await fetchWeatherByCoords(lat, lon);
           set((state) => {
-             const newHistory = [data.location.name, ...state.recentSearches.filter(s => s !== data.location.name)].slice(0, 5);
+             const newHistory = [
+               data.location.name, 
+               ...state.recentSearches.filter(s => s !== data.location.name)
+             ].slice(0, 5);
              return { data, isLoading: false, recentSearches: newHistory };
           });
         } catch (err) {
-          set({ 
-            error: err instanceof Error ? err.message : 'Failed to fetch weather data', 
-            isLoading: false 
+          set({
+            error: err instanceof Error ? err.message : 'Failed to fetch weather data',
+            isLoading: false
           });
         }
       },
@@ -57,6 +65,7 @@ export const useWeatherStore = create<WeatherState>()(
       addToHistory: (city: string) => set((state) => ({
         recentSearches: [city, ...state.recentSearches.filter(s => s !== city)].slice(0, 5)
       })),
+      clearHistory: () => set({ recentSearches: [] }),
     }),
     {
       name: 'skylys-weather-storage',
