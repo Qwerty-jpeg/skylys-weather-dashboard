@@ -88,20 +88,40 @@ export function WeatherHeader() {
   const handleQuickSearch = (city: string) => {
     searchCity(city);
   };
-  const handleShare = () => {
-    if (currentData?.location?.name) {
-      const url = window.location.href;
-      navigator.clipboard.writeText(url).then(() => {
-        toast.success(`Link copied for ${currentData.location.name}!`);
-      }).catch(() => {
-        toast.error("Failed to copy link");
-      });
-    } else {
+  const handleShare = async () => {
+    if (!currentData?.location?.name) {
       toast.error("No city selected to share");
+      return;
+    }
+    const shareData = {
+      title: `Skylys Weather - ${currentData.location.name}`,
+      text: `Check out the weather in ${currentData.location.name}: ${Math.round(currentData.current.temp)}° ${currentData.current.condition}`,
+      url: window.location.href,
+    };
+    // Use Web Share API if available (mobile/supported browsers)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success("Shared successfully!");
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Error sharing:', err);
+          toast.error("Failed to share");
+        }
+      }
+    } else {
+      // Fallback to clipboard copy
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success(`Link copied for ${currentData.location.name}!`);
+      } catch (err) {
+        console.error('Clipboard error:', err);
+        toast.error("Failed to copy link");
+      }
     }
   };
-  const isCurrentFavorite = currentData?.location?.name 
-    ? favorites.includes(currentData.location.name) 
+  const isCurrentFavorite = currentData?.location?.name
+    ? favorites.includes(currentData.location.name)
     : false;
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/30 backdrop-blur-xl supports-[backdrop-filter]:bg-background/20 transition-all duration-300">

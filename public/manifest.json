@@ -1,0 +1,23 @@
+{
+  "name": "Skylys Weather Dashboard",
+  "short_name": "Skylys",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://api.iconify.design/lucide:cloud-sun.svg?color=%230ea5e9&width=192&height=192",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://api.iconify.design/lucide:cloud-sun.svg?color=%230ea5e9&width=512&height=512",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
