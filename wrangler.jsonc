@@ -5,7 +5,7 @@
  {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "skylys-weather-dashb-8di047pp",
-	"main": "src/worker/index.ts",
+	"main": "worker/bootstrap.js",
 	"compatibility_date": "2025-04-24",
 	"assets": {
 		"not_found_handling": "single-page-application",
